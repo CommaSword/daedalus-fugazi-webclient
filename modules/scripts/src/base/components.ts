@@ -43,6 +43,20 @@ import {
 	fugazi.loaded(<Descriptor> {
 		name: "io.fugazi.components",
 		commands: {
+			loadExcalibur: {
+				title: "Load Excalibur Module",
+				async: true,
+				returns: "ui.message",
+				parametersForm: "struct",
+				syntax: "load excalibur",
+				componentConstructor: fugazi.terminal.TerminalCommand,
+				handler: function (context: PrivilegedModuleContext, props: LoadProperties): Promise<string> {
+					return fugazi.registry.load({url: 'http://localhost:3333/excalibur.json'}).then<string>(loadedModule => {
+						context.getParent().getTerminal().moduleLoaded(loadedModule);
+						return "module " + loadedModule.getPath().toString() + " loaded";
+					});
+				}
+			},
 			load: {
 				title: "Load Module",
 				async: true,
