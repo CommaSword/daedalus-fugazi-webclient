@@ -39,24 +39,28 @@ import {
 
 		return struct;
 	}
-
+	function loadModuleCommand(moduleName:string){
+		const moduleDisplayName = moduleName.substr(0,1).toLowerCase() + moduleName.substr(1).toLowerCase();
+		return {
+			title: `Load ${moduleDisplayName} Module`,
+			async: true,
+			returns: "ui.message",
+			parametersForm: "struct",
+			syntax: "load "+moduleName,
+			componentConstructor: fugazi.terminal.TerminalCommand,
+			handler: function (context: PrivilegedModuleContext, props: LoadProperties): Promise<string> {
+				return fugazi.registry.load({url: window.location.origin + `/${moduleName}.json`}).then<string>(loadedModule => {
+					context.getParent().getTerminal().moduleLoaded(loadedModule);
+					return "module " + loadedModule.getPath().toString() + " loaded";
+				});
+			}
+		}
+	}
 	fugazi.loaded(<Descriptor> {
 		name: "io.fugazi.components",
 		commands: {
-			loadExcalibur: {
-				title: "Load Excalibur Module",
-				async: true,
-				returns: "ui.message",
-				parametersForm: "struct",
-				syntax: "load excalibur",
-				componentConstructor: fugazi.terminal.TerminalCommand,
-				handler: function (context: PrivilegedModuleContext, props: LoadProperties): Promise<string> {
-					return fugazi.registry.load({url: window.location.origin + '/excalibur.json'}).then<string>(loadedModule => {
-						context.getParent().getTerminal().moduleLoaded(loadedModule);
-						return "module " + loadedModule.getPath().toString() + " loaded";
-					});
-				}
-			},
+			loadExcalibur: loadModuleCommand('excalibur'),
+			loadEcr: loadModuleCommand('ECR'),
 			load: {
 				title: "Load Module",
 				async: true,
