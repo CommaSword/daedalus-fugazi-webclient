@@ -39,16 +39,20 @@ import {
 
 		return struct;
 	}
-	function loadModuleCommand(moduleName:string){
-		const moduleDisplayName = moduleName.substr(0,1).toLowerCase() + moduleName.substr(1).toLowerCase();
+
+	function loadModuleCommand(moduleName: string, password?: string) {
+		const moduleDisplayName = moduleName.substr(0, 1).toLowerCase() + moduleName.substr(1).toLowerCase();
 		return {
 			title: `Load ${moduleDisplayName} Module`,
 			async: true,
 			returns: "ui.message",
 			parametersForm: "struct",
-			syntax: "load "+moduleName,
+			syntax: "load " + moduleName + (password ? " (password string)" : ""),
 			componentConstructor: fugazi.terminal.TerminalCommand,
-			handler: function (context: PrivilegedModuleContext, props: LoadProperties): Promise<string> {
+			handler: function (context: PrivilegedModuleContext, props: { password?: string }): Promise<string> {
+				if (password && (!props.password || props.password.toLowerCase().trim() !== password.toLowerCase().trim())) {
+					throw new Error('incorrect or missing password')
+				}
 				return fugazi.registry.load({url: window.location.origin + `/${moduleName}.json`}).then<string>(loadedModule => {
 					context.getParent().getTerminal().moduleLoaded(loadedModule);
 					return "module " + loadedModule.getPath().toString() + " loaded";
@@ -56,11 +60,12 @@ import {
 			}
 		}
 	}
+
 	fugazi.loaded(<Descriptor> {
 		name: "io.fugazi.components",
 		commands: {
 			loadExcalibur: loadModuleCommand('excalibur'),
-			loadEcr: loadModuleCommand('ECR'),
+			loadEcr: loadModuleCommand('ECR', 'sunburn'),
 			load: {
 				title: "Load Module",
 				async: true,
